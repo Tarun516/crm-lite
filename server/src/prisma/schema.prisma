@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  email        String  @unique
+  passwordHash String
+  leads        Lead[]  @relation("UserLeads")
+  notes        Note[]
+}
+
+model Lead {
+  id            Int      @id @default(autoincrement())
+  name          String
+  company       String?
+  email         String?
+  phone         String?
+  status        Status   @default(New)
+  nextFollowUp  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  ownerId       Int
+  owner         User     @relation("UserLeads", fields: [ownerId], references: [id])
+  notes         Note[]
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  leadId    Int
+  authorId  Int?
+  body      String
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  author    User?    @relation(fields: [authorId], references: [id])
+}
+
+enum Status {
+  New
+  Contacted
+  Negotiating
+  Won
+  Lost
+}
